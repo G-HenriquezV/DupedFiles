@@ -12,7 +12,15 @@ class FileBank:
 
     def __init__(self, folder):
         self.path = Path(folder)
-        self.files = {}
+        self.files = []
+
+    def scan_folders(self):
+        """
+        Appends every file in the folder and subfolders to the self.file list attribute
+        """
+        for i in self.path.glob('**/*'):   # https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
+            if i.is_file():
+                self.files.append(i)
 
 
 class File:
