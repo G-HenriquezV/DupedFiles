@@ -10,7 +10,7 @@ class FileBank:
     Pass
     """
 
-    def __init__(self, folder):
+    def __init__(self, folder: str):
         self.path = Path(folder)
         self.files = []
 
@@ -18,9 +18,9 @@ class FileBank:
         """
         Appends every file in the folder and subfolders to the self.file list attribute
         """
-        for i in self.path.glob('**/*'):   # https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
-            if i.is_file():
-                self.files.append(i)
+        for obj in self.path.glob('**/*'):  # https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
+            if obj.is_file():
+                self.files.append(obj)
 
 
 class File:
