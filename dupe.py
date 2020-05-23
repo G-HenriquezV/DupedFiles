@@ -1,6 +1,7 @@
 """
 Main library
 """
+from collections import defaultdict
 from hashlib import md5
 from itertools import combinations
 from pathlib import Path
@@ -13,7 +14,7 @@ class FileBank:
 
     def __init__(self, folder: str):
         self.path = Path(folder)
-        self.files = []
+        self.files = defaultdict(list)
 
     def scan_folders(self):
         """
@@ -21,29 +22,27 @@ class FileBank:
         """
         for obj in self.path.glob('**/*'):  # https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
             if obj.is_file():
-                self.files.append(File(obj))
+                obj = FileToCheck(obj)
+                self.files[obj.hash].append(obj)
 
-    def run_comparisons(self):
+    def print_duplicates(self) -> None:
         """
-        Compares every file in self.files list
-        # TODO: Create a list or dictionary that lists every matching file
+
         """
-        for f1, f2 in combinations(self.files, 2):
-            if f1.compare_to(f2) is True:
-                print(f'{f1.name} matches with {f2.name}')
-            else:
-                # print(f'{f1.name} does not match {f2.name}')
-                pass
+        for key, value in self.files.items():
+            if len(value) > 1:
+                print(f'Duplicates found with md5 checksum {key}')
+                print(value)
 
 
-class File:
+class FileToCheck:
     """
-    TODO
+    Object that can be compared
     """
 
     def __init__(self, file: Path):
         """
-        Initializes a File object
+        Initializes a FileToCheck object
 
         :param file: pathlib.Path object pointing to the file
         :type file: Path
@@ -51,6 +50,15 @@ class File:
         self.file = file
         self.size = file.stat().st_size
         self._md5 = None
+
+    def __eq__(self, other: 'FileToCheck') -> bool:
+        """
+        Compares to another file to check if it is duplicate. Equivalent to compare_to method
+
+        :param other: FileToCheck type object to compare md5 checksum
+        :return: True if the checksum of the other object is the same. False otherwise.
+        """
+        return self.compare_to(other)
 
     @property
     def name(self) -> str:
@@ -61,7 +69,9 @@ class File:
 
     def _calculate_md5(self) -> str:
         """
-        TODO
+        Calculates the md5 checksum of the file, sets the self._md5 attribute and returns it.
+
+        :return: md5 checksum string of the file
         """
         hash_md5 = md5()
         with open(self.file.as_posix(), 'rb') as f:
@@ -70,17 +80,19 @@ class File:
         self._md5 = hash_md5.hexdigest()
         return self._md5
 
-    def get_hash(self) -> str:
+    @property  # Maybe this should not be a property?
+    def hash(self) -> str:
         """
-        TODO
-        :return:
+        Calculates the md5 checksum of the file if it
+
+        :rtype: str
+        :return: md5 checksum of the file
         """
         if self._md5 is None:
             return self._calculate_md5()
-        else:
-            return self._md5
+        return self._md5
 
-    def compare_to(self, file: 'File') -> bool:
+    def compare_to(self, file: 'FileToCheck') -> bool:
         """
         TODO
         :param file:
@@ -89,4 +101,4 @@ class File:
         if self.size != file.size:
             return False
         else:
-            return self.get_hash() == file.get_hash()
+            return self.hash == file.hash
