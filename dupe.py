@@ -3,7 +3,6 @@ Main library
 """
 from collections import defaultdict
 from hashlib import md5
-from itertools import combinations
 from pathlib import Path
 
 
@@ -27,7 +26,7 @@ class FileBank:
 
     def print_duplicates(self) -> None:
         """
-
+        Prints duplicate items
         """
         for key, value in self.files.items():
             if len(value) > 1:
@@ -94,9 +93,10 @@ class FileToCheck:
 
     def compare_to(self, file: 'FileToCheck') -> bool:
         """
-        TODO
+        Compares to another file.
+
         :param file:
-        :return:
+        :return: True if md5 checksums are the same. False otherwise.
         """
         if self.size != file.size:
             return False
