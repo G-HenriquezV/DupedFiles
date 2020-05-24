@@ -138,7 +138,6 @@ class FileBank:
             print('Files:')
             for file in file_locations:
                 print(f'- {file}')
-            print('\n')
 
     def save_json(self) -> None:
         """
