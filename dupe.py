@@ -88,15 +88,13 @@ class FileToCheck:
 
 class FileBank:
     """
-    TODO: Seriously I have to document everything here
+    Class to analyze a folder for duplicate files
     """
 
     def __init__(self, folder: str, autorun: bool = True):
         """
-
-
         :param folder: Folder to scan
-        :param autorun: If checksums and duplicates should be obtained when initialized
+        :param autorun: If true checksums and duplicates should be obtained when initialized
         """
         self.path = Path(folder)
         self.files = defaultdict(list)
