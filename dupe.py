@@ -40,7 +40,7 @@ class FileToCheck:
         return self.file.name
 
     @property
-    def location(self) -> str:
+    def absolute_loc(self) -> str:
         """
         Returns the full location of the file as a string
 
@@ -100,13 +100,12 @@ class FileBank:
         """
         self.path = Path(folder)
         self.files = defaultdict(list)
-        self.n_files = 0  # Number of files
         self.duplicates = None
         if autorun:
             self.scan_folders()
             self.get_duplicates()
 
-    def scan_folders(self):
+    def scan_folders(self) -> None:
         """
         Appends every file in the folder and subfolders to the self.file list attribute.
         Automatically calculates the md5 checksum of every file
@@ -115,9 +114,8 @@ class FileBank:
             if obj.is_file():
                 obj = FileToCheck(obj)
                 self.files[obj.hash()].append(obj)
-                self.n_files += 1
 
-    def get_duplicates(self) -> dict:
+    def get_duplicates(self) -> None:
         """
         :return: Dictionary with duplicated files
         """
@@ -126,16 +124,15 @@ class FileBank:
             if len(files) > 1:
                 dupe_dict[checksum] = files
         self.duplicates = dupe_dict
-        return dupe_dict
 
     def print_duplicates(self) -> None:
         """
         Prints duplicate items
         """
         for key, value in self.duplicates.items():
-            file_locations = map(lambda p: p.location, value)
-            print(f'MD5: {key}')
-            print('Files:')
+            file_locations = map(lambda p: p.absolute_loc, value)
+            print('\n')
+            print(f'MD5: {key.upper()}')
             for file in file_locations:
                 print(f'- {file}')
 
@@ -143,5 +140,10 @@ class FileBank:
         """
         Saves a json file, named duplicates.json, at the cwd with every duplicated file.
         """
+        dump_dict = {}
+        for key, value in self.duplicates.items():
+            file_locations = list(map(lambda p: p.absolute_loc, value))
+            dump_dict[key] = file_locations
+
         with open('duplicates.json', 'w', encoding='utf-8') as f:
-            json.dump(self.duplicates, f, indent=2, ensure_ascii=False)
+            json.dump(dump_dict, f, indent=2, ensure_ascii=False)
