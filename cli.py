@@ -22,9 +22,6 @@ def look_duplicates(folder: str):
 
     :param folder: String of the folder name
     """
-    if not Path(folder).is_dir():
-        print('Folder does not exist')
-        exit()
     files = FileBank(folder)
     files.print_duplicates()
 

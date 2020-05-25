@@ -30,6 +30,10 @@ class FileToCheck:
         :param other: FileToCheck type object to compare md5 checksum
         :return: True if the checksum of the other object is the same. False otherwise.
         """
+        # Put compare_to here
+        # Do a type check
+        if not isinstance(other, FileToCheck):
+            return False
         return self.compare_to(other)
 
     @property
@@ -80,10 +84,19 @@ class FileToCheck:
         :param file:
         :return: True if md5 checksums are the same. False otherwise.
         """
-        if self.size != file.size:
-            return False
-        else:
-            return self.hash() == file.hash()
+        return self.size == file.size and self.hash() == file.hash()
+
+
+class A:
+    def __init__(self, string):
+        self.string = string
+        self._lower = None
+
+    @property
+    def lower(self):
+        if self._lower is None:
+            self._lower = self.string.lower()
+        return self._lower
 
 
 class FileBank:
@@ -97,6 +110,8 @@ class FileBank:
         :param autorun: If true checksums and duplicates should be obtained when initialized
         """
         self.path = Path(folder)
+        if not self.path.is_dir():
+            raise NotADirectoryError('Folder does not exist')
         self.files = defaultdict(list)
         self.duplicates = None
         if autorun:
@@ -128,20 +143,18 @@ class FileBank:
         Prints duplicate items
         """
         for key, value in self.duplicates.items():
-            file_locations = map(lambda p: p.absolute_loc, value)
             print('\n')
             print(f'MD5: {key.upper()}')
-            for file in file_locations:
-                print(f'- {file}')
+            for file in value:
+                print(f'- {file.absolute_loc}')
 
     def save_json(self) -> None:
         """
         Saves a json file, named duplicates.json, at the cwd with every duplicated file.
         """
         dump_dict = {}
-        for key, value in self.duplicates.items():
-            file_locations = list(map(lambda p: p.absolute_loc, value))
-            dump_dict[key] = file_locations
+        for key, file_checks in self.duplicates.items():
+            dump_dict[key] = [file_check.absolute_loc for file_check in file_checks]
 
         with open('duplicates.json', 'w', encoding='utf-8') as f:
             json.dump(dump_dict, f, indent=2, ensure_ascii=False)
