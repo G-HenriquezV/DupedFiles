@@ -5,11 +5,12 @@ import json
 from collections import defaultdict
 from hashlib import md5
 from pathlib import Path
+from typing import Optional, Any, Union
 
 
 class FileToCheck:
     """
-    Object that can be compared
+    Object that includes a file. Can be compared to another file.
     """
 
     def __init__(self, file: Path):
@@ -21,16 +22,18 @@ class FileToCheck:
         """
         self.file = file
         self.size = file.stat().st_size
-        self._md5 = None
+        self._md5 = None  # MD5 Hash string
 
     def __eq__(self, other: 'FileToCheck') -> bool:
         """
-        Compares to another file to check if it is duplicate. Equivalent to compare_to method
+        Compares to another file to check if it is duplicate
 
         :param other: FileToCheck type object to compare md5 checksum
         :return: True if the checksum of the other object is the same. False otherwise.
         """
-        return self.compare_to(other)
+        if not isinstance(other, FileToCheck):
+            return False
+        return self.size == other.size and self.md5 == other.md5
 
     @property
     def name(self) -> str:
@@ -49,7 +52,7 @@ class FileToCheck:
         """
         return str(self.file.absolute())
 
-    def _calculate_md5(self) -> str:
+    def _calculate_md5(self) -> None:
         """
         Calculates the md5 checksum of the file, sets the self._md5 attribute and returns it.
 
@@ -60,9 +63,9 @@ class FileToCheck:
             for chunk in iter(lambda: f.read(4096), b''):
                 hash_md5.update(chunk)
         self._md5 = hash_md5.hexdigest()
-        return self._md5
 
-    def hash(self) -> str:
+    @property
+    def md5(self) -> str:
         """
         Calculates the md5 checksum of the file if it wasn't before. Then returns it.
 
@@ -70,20 +73,8 @@ class FileToCheck:
         :rtype: str
         """
         if self._md5 is None:
-            return self._calculate_md5()
+            self._calculate_md5()
         return self._md5
-
-    def compare_to(self, file: 'FileToCheck') -> bool:
-        """
-        Compares to another file.
-
-        :param file:
-        :return: True if md5 checksums are the same. False otherwise.
-        """
-        if self.size != file.size:
-            return False
-        else:
-            return self.hash() == file.hash()
 
 
 class FileBank:
@@ -96,7 +87,9 @@ class FileBank:
         :param folder: Folder to scan
         :param autorun: If true checksums and duplicates should be obtained when initialized
         """
-        self.path = Path(folder)
+        if not (path := Path(folder)).is_dir():
+            raise NotADirectoryError('Folder does not exist!')
+        self.path = path
         self.files = defaultdict(list)
         self.duplicates = None
         if autorun:
@@ -111,7 +104,7 @@ class FileBank:
         for obj in self.path.glob('**/*'):  # https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
             if obj.is_file():
                 obj = FileToCheck(obj)
-                self.files[obj.hash()].append(obj)
+                self.files[obj.md5].append(obj)
 
     def get_duplicates(self) -> None:
         """
@@ -128,20 +121,18 @@ class FileBank:
         Prints duplicate items
         """
         for key, value in self.duplicates.items():
-            file_locations = map(lambda p: p.absolute_loc, value)
             print('\n')
             print(f'MD5: {key.upper()}')
-            for file in file_locations:
-                print(f'- {file}')
+            for file in value:
+                print(f'- {file.absolute_loc}')
 
     def save_json(self) -> None:
         """
         Saves a json file, named duplicates.json, at the cwd with every duplicated file.
         """
         dump_dict = {}
-        for key, value in self.duplicates.items():
-            file_locations = list(map(lambda p: p.absolute_loc, value))
-            dump_dict[key] = file_locations
+        for key, file_checks in self.duplicates.items():
+            dump_dict[key] = [file_check.absolute_loc for file_check in file_checks]
 
         with open('duplicates.json', 'w', encoding='utf-8') as f:
             json.dump(dump_dict, f, indent=2, ensure_ascii=False)

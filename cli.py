@@ -22,10 +22,11 @@ def look_duplicates(folder: str):
 
     :param folder: String of the folder name
     """
-    if not Path(folder).is_dir():
-        print('Folder does not exist')
-        exit()
-    files = FileBank(folder)
+    try:
+        files = FileBank(folder)
+    except NotADirectoryError:
+        print('Folder not found!')
+        return None
     files.print_duplicates()
 
 
@@ -38,10 +39,11 @@ def look_duplicates_save(folder: str):
 
     :param folder: String of the folder name.
     """
-    if not Path(folder).is_dir():
-        print('Folder does not exist')
-        exit()
-    files = FileBank(folder)
+    try:
+        files = FileBank(folder)
+    except NotADirectoryError:
+        print('Folder not found!')
+        return None
     files.print_duplicates()
     files.save_json()
 
