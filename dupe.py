@@ -5,7 +5,6 @@ import json
 from collections import defaultdict
 from hashlib import md5
 from pathlib import Path
-from typing import Optional, Any, Union
 
 
 class FileToCheck:
