@@ -31,7 +31,7 @@ def look_duplicates(folder: str):
 
 
 @cli.command()
-@click.argument('folder', type=click.Path(exists=True))
+@click.argument('folder')
 def look_duplicates_save(folder: str):
     """
     Looks for duplicate files in the folder and subfolders.
